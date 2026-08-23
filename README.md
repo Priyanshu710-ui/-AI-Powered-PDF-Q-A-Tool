@@ -6,7 +6,7 @@ The application uses a **Retrieval-Augmented Generation (RAG)** pipeline to retr
 
 ## 🚀 Live Demo
 
-> Coming soon — the application is currently being prepared for deployment.
+**[Open the live app →](https://ai-pdf-qa-tool-3b8zboz9q-jack-5127.vercel.app/)**
 
 ## ✨ Features
 
@@ -18,7 +18,7 @@ The application uses a **Retrieval-Augmented Generation (RAG)** pipeline to retr
 - 🤖 Generate answers using the Groq API
 - 📚 Retrieve relevant document context before answering
 - 🔎 View the retrieved context used for an answer
-- 💻 Simple and interactive Streamlit interface
+- 💻 Simple and interactive web interface
 
 ## 🧠 RAG Architecture
 
@@ -29,18 +29,15 @@ The application follows this pipeline:
                      │
                      ▼
               PDF Text Extraction
-                  (PyPDF2)
                      │
                      ▼
                Text Chunking
-            800 chars + overlap
                      │
                      ▼
-          Sentence Transformer
-          (all-MiniLM-L6-v2)
+          Embedding Generation
                      │
                      ▼
-               FAISS Index
+               Vector Index
                      │
                      │
              User Question
@@ -56,7 +53,7 @@ The application follows this pipeline:
                      │
                      ▼
                Groq LLM
-          (Llama 3.1 8B Instant)
                      │
                      ▼
                 Final Answer
+```
