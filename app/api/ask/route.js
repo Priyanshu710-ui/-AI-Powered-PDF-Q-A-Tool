@@ -14,6 +14,24 @@ function selectRelevantText(document, question) {
   return ranked.slice(0, 8).map(x => x.chunk).join('\n\n---\n\n');
 }
 
+async function chooseAvailableModel(groq) {
+  const models = await groq.models.list();
+  const available = new Set((models.data || []).filter(model => model.active !== false).map(model => model.id));
+  const preferred = [
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant',
+    'openai/gpt-oss-20b',
+    'openai/gpt-oss-120b',
+    'groq/compound-mini',
+    'groq/compound'
+  ];
+  const selected = preferred.find(model => available.has(model));
+  if (!selected) {
+    throw new Error(`No supported chat model is available for this Groq API key. Available models: ${[...available].slice(0, 10).join(', ') || 'none'}`);
+  }
+  return selected;
+}
+
 export async function POST(request) {
   try {
     const { question, document } = await request.json();
@@ -26,9 +44,10 @@ export async function POST(request) {
 
     const context = selectRelevantText(document.slice(0, 120000), question);
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const model = await chooseAvailableModel(groq);
+
     const completion = await groq.chat.completions.create({
-      model: 'qwen/qwen3-32b',
-      reasoning_effort: 'none',
+      model,
       temperature: 0.2,
       max_tokens: 700,
       messages: [{
@@ -40,7 +59,7 @@ export async function POST(request) {
       }]
     });
 
-    return Response.json({ answer: completion.choices[0]?.message?.content || 'No answer was generated.' });
+    return Response.json({ answer: completion.choices[0]?.message?.content || 'No answer was generated.', model });
   } catch (error) {
     const message = error?.message || 'Failed to generate an answer.';
     return Response.json({ error: message }, { status: error?.status || 500 });
