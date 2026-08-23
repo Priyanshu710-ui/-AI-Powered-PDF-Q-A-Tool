@@ -27,17 +27,22 @@ export async function POST(request) {
     const context = selectRelevantText(document.slice(0, 120000), question);
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: 'qwen/qwen3-32b',
+      reasoning_effort: 'none',
       temperature: 0.2,
       max_tokens: 700,
       messages: [{
+        role: 'system',
+        content: 'Answer accurately and only from the supplied document context. If the answer is not present, clearly say that it could not be found in the document.'
+      }, {
         role: 'user',
-        content: `Answer using only the document context below. If the answer is not present, say you could not find it in the document.\n\nDOCUMENT CONTEXT:\n${context}\n\nQUESTION: ${question}\n\nANSWER:`
+        content: `DOCUMENT CONTEXT:\n${context}\n\nQUESTION: ${question}`
       }]
     });
 
     return Response.json({ answer: completion.choices[0]?.message?.content || 'No answer was generated.' });
   } catch (error) {
-    return Response.json({ error: error.message || 'Failed to generate an answer.' }, { status: 500 });
+    const message = error?.message || 'Failed to generate an answer.';
+    return Response.json({ error: message }, { status: error?.status || 500 });
   }
 }
